@@ -1,8 +1,13 @@
+using BookingManager.Api.Dtos.Common;
 using BookingManager.Api.Exceptions;
-using Microsoft.AspNetCore.Mvc;
 
 namespace BookingManager.Api.Middleware;
 
+/// <summary>
+/// Maps domain exceptions to the API's { code, message } error shape.
+/// Unexpected exceptions are logged in full but surface only a generic message —
+/// internals (SQL, stack traces) must never leak to clients.
+/// </summary>
 public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<ExceptionHandlingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)
@@ -11,33 +16,28 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
         {
             await next(context);
         }
+        catch (ApiException ex)
+        {
+            context.Response.StatusCode = ex.StatusCode;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new ErrorResponse
+            {
+                Code = ex.Code,
+                Message = ex.Message
+            });
+        }
         catch (Exception ex)
         {
-            var (statusCode, title) = ex switch
-            {
-                NotFoundException => (StatusCodes.Status404NotFound, "Not Found"),
-                BookingOverlapException => (StatusCodes.Status409Conflict, "Booking Overlap"),
-                BookingAlreadyCancelledException => (StatusCodes.Status409Conflict, "Booking Already Cancelled"),
-                DomainValidationException => (StatusCodes.Status400BadRequest, "Validation Error"),
-                _ => (StatusCodes.Status500InternalServerError, "Internal Server Error")
-            };
+            logger.LogError(ex, "Unhandled exception processing {Method} {Path}",
+                context.Request.Method, context.Request.Path);
 
-            if (statusCode == StatusCodes.Status500InternalServerError)
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new ErrorResponse
             {
-                logger.LogError(ex, "Unhandled exception processing {Path}", context.Request.Path);
-            }
-
-            var problemDetails = new ProblemDetails
-            {
-                Status = statusCode,
-                Title = title,
-                Detail = ex.Message,
-                Instance = context.Request.Path
-            };
-
-            context.Response.StatusCode = statusCode;
-            context.Response.ContentType = "application/problem+json";
-            await context.Response.WriteAsJsonAsync(problemDetails);
+                Code = "INTERNAL_ERROR",
+                Message = "An unexpected error occurred. Please try again later."
+            });
         }
     }
 }

@@ -1,11 +1,14 @@
-using BookingManager.Api.Dtos;
-using BookingManager.Api.Models;
+using BookingManager.Api.Dtos.Bookings;
+using BookingManager.Api.Dtos.Common;
 
 namespace BookingManager.Api.Services;
 
 public interface IBookingService
 {
-    Task<Booking> CreateAsync(CreateBookingRequest request);
-    Task<List<Booking>> GetForResourceAsync(Guid resourceId, DateTime? from, DateTime? to);
-    Task<Booking> CancelAsync(Guid id);
+    Task<BookingResponse> CreateAsync(CreateBookingRequest request);
+    Task<PagedResponse<BookingSummaryResponse>> GetMyBookingsAsync(BookingQuery query);
+    Task<BookingResponse> GetByIdAsync(Guid id);
+    Task<BookingResponse> CancelAsync(Guid id);
+    Task<PagedResponse<BookingSummaryResponse>> GetAllForAdminAsync(AdminBookingQuery query);
+    Task<AvailabilityResponse> GetAvailabilityAsync(Guid resourceId, DateTime from, DateTime to, int durationMinutes);
 }

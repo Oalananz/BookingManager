@@ -1,35 +1,46 @@
-using BookingManager.Api.Dtos;
-using BookingManager.Api.Mapping;
+using BookingManager.Api.Dtos.Bookings;
+using BookingManager.Api.Dtos.Common;
 using BookingManager.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace BookingManager.Api.Controllers;
 
 [ApiController]
 [Route("api/bookings")]
+[Authorize]
 public class BookingsController(IBookingService bookingService) : ControllerBase
 {
     [HttpPost]
-    public async Task<ActionResult<BookingResponse>> Create(CreateBookingRequest request)
+    [EnableRateLimiting("booking-write")]
+    public async Task<IActionResult> Create(CreateBookingRequest request)
     {
         var booking = await bookingService.CreateAsync(request);
-        return CreatedAtAction(nameof(GetForResource), new { resourceId = booking.ResourceId }, booking.ToResponse());
+        return CreatedAtAction(nameof(GetById), new { id = booking.Id }, ApiResponse.Of(booking));
     }
 
+    /// <summary>Non-admin callers only ever see their own bookings.</summary>
     [HttpGet]
-    public async Task<ActionResult<List<BookingResponse>>> GetForResource(
-        [FromQuery] Guid resourceId,
-        [FromQuery] DateTime? from,
-        [FromQuery] DateTime? to)
+    [EnableRateLimiting("reads")]
+    public async Task<IActionResult> GetMine([FromQuery] BookingQuery query)
     {
-        var bookings = await bookingService.GetForResourceAsync(resourceId, from, to);
-        return Ok(bookings.Select(b => b.ToResponse()).ToList());
+        return Ok(await bookingService.GetMyBookingsAsync(query));
+    }
+
+    [HttpGet("{id:guid}")]
+    [EnableRateLimiting("reads")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var booking = await bookingService.GetByIdAsync(id);
+        return Ok(ApiResponse.Of(booking));
     }
 
     [HttpPost("{id:guid}/cancel")]
-    public async Task<ActionResult<BookingResponse>> Cancel(Guid id)
+    [EnableRateLimiting("booking-write")]
+    public async Task<IActionResult> Cancel(Guid id)
     {
         var booking = await bookingService.CancelAsync(id);
-        return Ok(booking.ToResponse());
+        return Ok(ApiResponse.Of(booking));
     }
 }
