@@ -29,7 +29,7 @@ public class BookingService(AppDbContext dbContext, IResourceService resourceSer
         if (hasOverlap)
         {
             throw new BookingOverlapException(
-                $"Resource '{request.ResourceId}' already has a confirmed booking overlapping the requested time window.");
+                "This resource already has a confirmed booking that overlaps the requested time window.");
         }
 
         var booking = new Booking
