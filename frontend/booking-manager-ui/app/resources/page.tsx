@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { resourcesApi } from "@/lib/api/resources";
 import { Resource } from "@/lib/types/resource";
 import { ResourceList } from "@/components/resource/ResourceList";
+import { RequireAuth } from "@/components/auth/RequireAuth";
 import { Alert } from "@/components/ui/Alert";
 
-export default function ResourcesPage() {
+function Resources() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -14,7 +15,7 @@ export default function ResourcesPage() {
   useEffect(() => {
     resourcesApi
       .getAll()
-      .then(setResources)
+      .then(({ data }) => setResources(data))
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load resources."))
       .finally(() => setLoading(false));
   }, []);
@@ -25,5 +26,13 @@ export default function ResourcesPage() {
       {error && <Alert variant="error">{error}</Alert>}
       {loading ? <p className="text-sm text-zinc-500">Loading...</p> : <ResourceList resources={resources} />}
     </div>
+  );
+}
+
+export default function ResourcesPage() {
+  return (
+    <RequireAuth>
+      <Resources />
+    </RequireAuth>
   );
 }
