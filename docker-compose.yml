@@ -10,6 +10,41 @@ services:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking_manager_user -d booking_manager_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: src/BookingManager.Api/Dockerfile
+    container_name: booking-manager-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=booking_manager_db;Username=booking_manager_user;Password=booking_manager_password"
+      # Dev-only values; override via a .env file or real secrets in production.
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:-dev-only-signing-key-change-me-0123456789abcdef}
+      SeedAdmin__Email: ${SEED_ADMIN_EMAIL:-admin@bookingmanager.local}
+      SeedAdmin__Password: ${SEED_ADMIN_PASSWORD:-Admin123!}
+      Frontend__Origin: http://localhost:3000
+    ports:
+      - "5168:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend/booking-manager-ui
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5168
+    container_name: booking-manager-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
