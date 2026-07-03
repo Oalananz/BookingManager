@@ -3,6 +3,7 @@ using BookingManager.Api.Dtos;
 using BookingManager.Api.Exceptions;
 using BookingManager.Api.Models;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace BookingManager.Api.Services;
 
@@ -44,9 +45,34 @@ public class BookingService(AppDbContext dbContext, IResourceService resourceSer
         };
 
         dbContext.Bookings.Add(booking);
-        await dbContext.SaveChangesAsync();
+
+        try
+        {
+            await dbContext.SaveChangesAsync();
+        }
+        catch (Exception ex) when (IsOverlapConflict(ex))
+        {
+            throw new BookingOverlapException(
+                "This resource already has a confirmed booking that overlaps the requested time window.");
+        }
 
         return booking;
+    }
+
+    private static bool IsOverlapConflict(Exception exception)
+    {
+        for (var current = exception; current is not null; current = current.InnerException)
+        {
+            if (current is PostgresException
+                {
+                    SqlState: PostgresErrorCodes.ExclusionViolation or PostgresErrorCodes.DeadlockDetected
+                })
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public async Task<List<Booking>> GetForResourceAsync(Guid resourceId, DateTime? from, DateTime? to)
