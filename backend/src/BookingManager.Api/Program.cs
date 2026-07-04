@@ -195,6 +195,10 @@ if (!app.Environment.IsEnvironment("Testing"))
     var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     dbContext.Database.Migrate();
     await DbSeeder.SeedAdminUserAsync(dbContext, app.Configuration);
+    if (app.Environment.IsDevelopment())
+    {
+        await DbSeeder.SeedDemoDataAsync(dbContext);
+    }
 }
 
 if (app.Environment.IsDevelopment())

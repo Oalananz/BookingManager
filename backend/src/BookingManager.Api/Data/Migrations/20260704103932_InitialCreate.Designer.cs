@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BookingManager.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260703201906_InitialCreate")]
+    [Migration("20260704103932_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -166,7 +166,7 @@ namespace BookingManager.Api.Data.Migrations
                             Id = new Guid("11111111-1111-1111-1111-111111111111"),
                             Capacity = 12,
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Large conference room on the 1st floor.",
+                            Description = "Large conference room on the 1st floor with video conferencing.",
                             Name = "Conference Room A",
                             Status = "Available",
                             Type = "Room",
@@ -187,10 +187,63 @@ namespace BookingManager.Api.Data.Migrations
                         {
                             Id = new Guid("33333333-3333-3333-3333-333333333333"),
                             CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            Description = "Portable 4K projector.",
+                            Description = "Portable 4K projector with HDMI and USB-C.",
                             Name = "Projector",
                             Status = "Available",
                             Type = "Equipment",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("44444444-4444-4444-4444-444444444444"),
+                            Capacity = 4,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Soundproof pod for quick 1:1s and calls.",
+                            Name = "Meeting Pod 1",
+                            Status = "Available",
+                            Type = "Room",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("55555555-5555-5555-5555-555555555555"),
+                            Capacity = 20,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Shared lab space with oscilloscopes and soldering stations.",
+                            Name = "Electronics Lab",
+                            Status = "Available",
+                            Type = "Lab",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("66666666-6666-6666-6666-666666666666"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "16-inch loaner laptop for travel and demos.",
+                            Name = "MacBook Pro Loaner",
+                            Status = "Available",
+                            Type = "Equipment",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("77777777-7777-7777-7777-777777777777"),
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Prusa MK4 — currently being serviced.",
+                            Name = "3D Printer",
+                            Status = "Maintenance",
+                            Type = "Equipment",
+                            UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            Id = new Guid("88888888-8888-8888-8888-888888888888"),
+                            Capacity = 1,
+                            CreatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Description = "Standing desk by the window, dual monitors.",
+                            Name = "Hot Desk 42",
+                            Status = "Available",
+                            Type = "Workspace",
                             UpdatedAt = new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });

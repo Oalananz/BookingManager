@@ -107,9 +107,14 @@ namespace BookingManager.Api.Data.Migrations
                 columns: new[] { "Id", "Capacity", "CreatedAt", "Description", "Name", "Status", "Type", "UpdatedAt" },
                 values: new object[,]
                 {
-                    { new Guid("11111111-1111-1111-1111-111111111111"), 12, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Large conference room on the 1st floor.", "Conference Room A", "Available", "Room", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("11111111-1111-1111-1111-111111111111"), 12, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Large conference room on the 1st floor with video conferencing.", "Conference Room A", "Available", "Room", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
                     { new Guid("22222222-2222-2222-2222-222222222222"), 6, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Small meeting room next to the kitchen.", "Conference Room B", "Available", "Room", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
-                    { new Guid("33333333-3333-3333-3333-333333333333"), null, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Portable 4K projector.", "Projector", "Available", "Equipment", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }
+                    { new Guid("33333333-3333-3333-3333-333333333333"), null, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Portable 4K projector with HDMI and USB-C.", "Projector", "Available", "Equipment", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("44444444-4444-4444-4444-444444444444"), 4, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Soundproof pod for quick 1:1s and calls.", "Meeting Pod 1", "Available", "Room", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("55555555-5555-5555-5555-555555555555"), 20, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Shared lab space with oscilloscopes and soldering stations.", "Electronics Lab", "Available", "Lab", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("66666666-6666-6666-6666-666666666666"), null, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "16-inch loaner laptop for travel and demos.", "MacBook Pro Loaner", "Available", "Equipment", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("77777777-7777-7777-7777-777777777777"), null, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Prusa MK4 — currently being serviced.", "3D Printer", "Maintenance", "Equipment", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) },
+                    { new Guid("88888888-8888-8888-8888-888888888888"), 1, new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc), "Standing desk by the window, dual monitors.", "Hot Desk 42", "Available", "Workspace", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc) }
                 });
 
             migrationBuilder.CreateIndex(

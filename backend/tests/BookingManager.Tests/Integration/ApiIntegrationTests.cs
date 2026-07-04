@@ -107,7 +107,8 @@ public class ApiIntegrationTests : IClassFixture<BookingApiFactory>
 
     private static async Task<Guid> FirstResourceIdAsync(HttpClient client)
     {
-        var body = await client.GetFromJsonAsync<JsonElement>("/api/resources");
+        // Only Available resources accept bookings (the seed includes one in Maintenance).
+        var body = await client.GetFromJsonAsync<JsonElement>("/api/resources?status=Available");
         return body.GetProperty("data")[0].GetProperty("id").GetGuid();
     }
 

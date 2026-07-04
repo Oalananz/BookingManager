@@ -4,6 +4,16 @@ A production-style booking management service for shared resources (meeting room
 
 The headline feature is **database-level concurrency protection**: overlapping bookings are impossible even under concurrent requests, enforced by a PostgreSQL GiST exclusion constraint — not just application code.
 
+## Documentation
+
+Detailed docs with diagrams live in [`docs/`](docs/):
+
+| Doc | Covers |
+|---|---|
+| [Database](docs/database.md) | ER diagram, schema/indexes, the exclusion-constraint concurrency guard, seed data |
+| [Backend](docs/backend.md) | Layered architecture, request pipeline, endpoints, booking-creation and auth sequence diagrams, status state machines |
+| [Frontend](docs/frontend.md) | Route map & access control, auth flow, component structure, API client data flow |
+
 ---
 
 ## Running the project
@@ -21,10 +31,15 @@ docker compose up --build
 | Swagger  | http://localhost:5168/swagger |
 | Postgres | localhost:5433               |
 
-Migrations run automatically on API startup. A default admin account is seeded:
+Migrations run automatically on API startup, seeding eight resources (rooms, equipment, a lab, a workspace — one deliberately in `Maintenance`). These accounts are seeded so the app is explorable immediately:
 
-- **Email:** `admin@bookingmanager.local`
-- **Password:** `Admin123!`
+| Account | Email | Password | Notes |
+|---|---|---|---|
+| Admin | `admin@bookingmanager.local` | `Admin123!` | Always seeded |
+| Demo user | `alice@bookingmanager.local` | `Password1!` | Dev only, with sample bookings |
+| Demo user | `bob@bookingmanager.local` | `Password1!` | Dev only, with sample bookings |
+
+The demo users come with sample bookings over the next two days, including a back-to-back pair (boundary rule) and a cancelled booking (freed slot).
 
 (Dev-only defaults — override with `JWT_SIGNING_KEY`, `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` env vars.)
 
