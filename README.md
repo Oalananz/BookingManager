@@ -61,6 +61,72 @@ dotnet test                                     # everything (needs the compose 
 
 The `Integration`-tagged test is the concurrency proof: it fires two overlapping booking requests at real Postgres simultaneously and asserts exactly one wins.
 
+### Guided test drive with the seed data
+
+The seed is designed so every interesting behaviour can be triggered immediately after `docker compose up --build`, without creating any data first. Resource IDs are deterministic:
+
+| Resource | Id | Seeded state (all times UTC) |
+|---|---|---|
+| Conference Room A | `11111111-...-111111111111` | Tomorrow: Alice 09:00–10:00, Bob 10:00–12:00 (back-to-back) |
+| Conference Room B | `22222222-...-222222222222` | Tomorrow: Bob 13:00–14:00; Alice 09:00–10:00 **cancelled** |
+| Projector | `33333333-...-333333333333` | Tomorrow: Alice 09:00–17:00 (all-day loan) |
+| 3D Printer | `77777777-...-777777777777` | Status `Maintenance` — not bookable |
+
+In the **frontend** (http://localhost:3000): log in as `alice@bookingmanager.local` / `Password1!` to see her bookings under *My Bookings* (Bob's are invisible to her), or as `admin@bookingmanager.local` / `Admin123!` for the *Admin* tab with all 8 bookings and the audit log.
+
+Or drive the **API** directly (bash; Swagger at `/swagger` works too):
+
+```bash
+API=http://localhost:5168
+TOMORROW=$(date -u -d "+1 day" +%F)   # macOS: date -u -v+1d +%F
+ROOM_A=11111111-1111-1111-1111-111111111111
+ROOM_B=22222222-2222-2222-2222-222222222222
+
+# Log in as the seeded users
+ALICE=$(curl -s -X POST $API/api/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"alice@bookingmanager.local","password":"Password1!"}' \
+  | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+BOB=$(curl -s -X POST $API/api/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"bob@bookingmanager.local","password":"Password1!"}' \
+  | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+
+# 1. Overlap → 409 BOOKING_CONFLICT (Room A is taken 09:00–12:00 tomorrow)
+curl -s -X POST $API/api/bookings -H "Authorization: Bearer $BOB" -H 'Content-Type: application/json' \
+  -d "{\"resourceId\":\"$ROOM_A\",\"startDateTime\":\"${TOMORROW}T09:30:00Z\",\"endDateTime\":\"${TOMORROW}T10:30:00Z\"}"
+
+# 2. Back-to-back boundary → 201 (starts exactly when Bob's 13:00–14:00 on Room B ends)
+curl -s -X POST $API/api/bookings -H "Authorization: Bearer $ALICE" -H 'Content-Type: application/json' \
+  -d "{\"resourceId\":\"$ROOM_B\",\"startDateTime\":\"${TOMORROW}T14:00:00Z\",\"endDateTime\":\"${TOMORROW}T15:00:00Z\"}"
+
+# 3. Cancelled slot is free again → 201 (Alice's 09:00–10:00 on Room B was seeded cancelled)
+curl -s -X POST $API/api/bookings -H "Authorization: Bearer $BOB" -H 'Content-Type: application/json' \
+  -d "{\"resourceId\":\"$ROOM_B\",\"startDateTime\":\"${TOMORROW}T09:00:00Z\",\"endDateTime\":\"${TOMORROW}T10:00:00Z\"}"
+
+# 4. Maintenance resource → 409 RESOURCE_UNAVAILABLE
+curl -s -X POST $API/api/bookings -H "Authorization: Bearer $ALICE" -H 'Content-Type: application/json' \
+  -d "{\"resourceId\":\"77777777-7777-7777-7777-777777777777\",\"startDateTime\":\"${TOMORROW}T09:00:00Z\",\"endDateTime\":\"${TOMORROW}T10:00:00Z\"}"
+
+# 5. IDOR guard → 404 (Bob probes one of Alice's booking ids taken from her own list)
+ALICE_BOOKING=$(curl -s "$API/api/bookings?pageSize=1" -H "Authorization: Bearer $ALICE" \
+  | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)
+curl -s -o /dev/null -w '%{http_code}\n' $API/api/bookings/$ALICE_BOOKING -H "Authorization: Bearer $BOB"
+
+# 6. Availability reflects the seeded bookings (Room A: free 08–09 and 12–18 tomorrow)
+curl -s "$API/api/resources/$ROOM_A/availability?from=${TOMORROW}T08:00:00Z&to=${TOMORROW}T18:00:00Z&durationMinutes=60" \
+  -H "Authorization: Bearer $ALICE"
+
+# 7. Admin views: every booking, and the audit trail of everything you just did
+ADMIN=$(curl -s -X POST $API/api/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"admin@bookingmanager.local","password":"Admin123!"}' \
+  | grep -o '"accessToken":"[^"]*"' | cut -d'"' -f4)
+curl -s "$API/api/admin/bookings?pageSize=50" -H "Authorization: Bearer $ADMIN"
+curl -s "$API/api/admin/audit-logs?pageSize=20" -H "Authorization: Bearer $ADMIN"
+
+# 8. Rate limit → run 6× quickly; the 6th returns 429 RATE_LIMIT_EXCEEDED
+curl -s -o /dev/null -w '%{http_code}\n' -X POST $API/api/auth/login \
+  -H 'Content-Type: application/json' -d '{"email":"nobody@x.local","password":"wrong"}'
+```
+
 ---
 
 ## Architecture
